@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 import hashlib
@@ -6,6 +6,7 @@ import secrets
 import httpx
 import os
 from database import create_account, get_account_by_email
+from auth import create_access_token, get_current_user
 
 app = FastAPI(title="Account Service")
 
@@ -55,6 +56,8 @@ class SigninRequest(BaseModel):
 class AccountResponse(BaseModel):
     user_id: int
     email: str
+    access_token: str
+    token_type: str = "bearer"
 
 
 def generate_salt() -> str:
@@ -85,7 +88,15 @@ async def signup(request: SignupRequest):
         # Generate user_id from snowflake service
         user_id = await get_snowflake_id()
         create_account(user_id, request.email, salt, password_hash)
-        return AccountResponse(user_id=user_id, email=request.email)
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": user_id, "email": request.email})
+        
+        return AccountResponse(
+            user_id=user_id, 
+            email=request.email,
+            access_token=access_token
+        )
     except HTTPException:
         # Re-raise HTTP exceptions (snowflake service errors)
         raise
@@ -116,7 +127,28 @@ async def signin(request: SigninRequest):
             detail="Invalid credentials"
         )
 
-    return AccountResponse(user_id=account["user_id"], email=account["email"])
+    # Create access token
+    access_token = create_access_token(data={"sub": account["user_id"], "email": account["email"]})
+    
+    return AccountResponse(
+        user_id=account["user_id"], 
+        email=account["email"],
+        access_token=access_token
+    )
+
+# Protected endpoint example
+@app.get("/me")
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current user information using JWT token"""
+    return {
+        "user_id": current_user["user_id"],
+        "email": current_user["email"]
+    }
+
+@app.post("/verify-token")
+async def verify_user_token(current_user: dict = Depends(get_current_user)):
+    """Verify if token is valid"""
+    return {"valid": True, "user": current_user}
 
 if __name__ == "__main__":
     import uvicorn

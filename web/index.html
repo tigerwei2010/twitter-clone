@@ -238,6 +238,68 @@
     <script>
         const ACCOUNT_SERVICE_URL = 'http://localhost:8002';
 
+        // Cookie management functions
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+        }
+
+        // Get auth headers with token
+        function getAuthHeaders() {
+            const token = getCookie('access_token');
+            return token ? {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            } : {
+                'Content-Type': 'application/json'
+            };
+        }
+
+        // Check if user is logged in on page load
+        window.onload = function () {
+            const token = getCookie('access_token');
+            if (token) {
+                verifyTokenAndShowUser();
+            }
+        };
+
+        // Verify token and show user info
+        async function verifyTokenAndShowUser() {
+            try {
+                const response = await fetch(`${ACCOUNT_SERVICE_URL}/verify-token`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showUserInfo(data.user);
+                } else {
+                    // Token invalid, remove it
+                    deleteCookie('access_token');
+                }
+            } catch (error) {
+                console.error('Token verification failed:', error);
+                deleteCookie('access_token');
+            }
+        }
+
         // Tab switching
         function showTab(tabName) {
             // Update tab buttons
@@ -290,6 +352,9 @@
 
         // Logout
         function logout() {
+            // Delete access token cookie
+            deleteCookie('access_token');
+
             document.querySelectorAll('.form').forEach(form => form.style.display = 'block');
             document.querySelector('.tabs').style.display = 'flex';
             document.getElementById('user-info').style.display = 'none';
@@ -332,12 +397,11 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    showMessage('signup', 'Account created successfully! You can now sign in.', 'success');
-                    // Switch to signin tab after successful signup
-                    setTimeout(() => {
-                        document.getElementById('signin-email').value = email;
-                        showTab('signin');
-                    }, 2000);
+                    // Store access token in cookie (6 months = 180 days)
+                    setCookie('access_token', data.access_token, 180);
+
+                    showMessage('signup', 'Account created successfully!', 'success');
+                    setTimeout(() => showUserInfo(data), 1000);
                 } else {
                     showMessage('signup', data.detail || 'Failed to create account');
                 }
@@ -370,6 +434,9 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // Store access token in cookie (6 months = 180 days)
+                    setCookie('access_token', data.access_token, 180);
+
                     showMessage('signin', 'Sign in successful!', 'success');
                     setTimeout(() => showUserInfo(data), 1000);
                 } else {
