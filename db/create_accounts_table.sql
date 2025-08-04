@@ -1,5 +1,5 @@
 CREATE TABLE accounts (
-    user_id PRIMARY KEY,
+    user_id BIGINT PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     salt VARCHAR(255) NOT NULL,
     sha256_hash VARCHAR(255) NOT NULL,
