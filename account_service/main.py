@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 import hashlib
 import secrets
 import httpx
 import os
-from database import create_account, get_account_by_email
+from database import *
 from auth import create_access_token, get_current_user
 
 app = FastAPI(title="Account Service")
@@ -60,6 +61,30 @@ class AccountResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class CreateProfileRequest(BaseModel):
+    user_id: int
+    handle: str
+    display_name: str
+    profile_picture_url: Optional[str] = None
+
+
+class ProfileResponse(BaseModel):
+    user_id: int
+    handle: str
+    display_name: str
+    profile_picture_url: Optional[str] = None
+
+
+class UpdateDisplayNameRequest(BaseModel):
+    display_name: str
+
+
+class UpdateDisplayNameResponse(BaseModel):
+    user_id: int
+    display_name: str
+    message: str = "Display name updated successfully"
+
+
 def generate_salt() -> str:
     return secrets.token_hex(32)
 
@@ -88,12 +113,13 @@ async def signup(request: SignupRequest):
         # Generate user_id from snowflake service
         user_id = await get_snowflake_id()
         create_account(user_id, request.email, salt, password_hash)
-        
+
         # Create access token
-        access_token = create_access_token(data={"sub": user_id, "email": request.email})
-        
+        access_token = create_access_token(
+            data={"sub": user_id, "email": request.email})
+
         return AccountResponse(
-            user_id=user_id, 
+            user_id=user_id,
             email=request.email,
             access_token=access_token
         )
@@ -128,15 +154,18 @@ async def signin(request: SigninRequest):
         )
 
     # Create access token
-    access_token = create_access_token(data={"sub": account["user_id"], "email": account["email"]})
-    
+    access_token = create_access_token(
+        data={"sub": account["user_id"], "email": account["email"]})
+
     return AccountResponse(
-        user_id=account["user_id"], 
+        user_id=account["user_id"],
         email=account["email"],
         access_token=access_token
     )
 
 # Protected endpoint example
+
+
 @app.get("/me")
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Get current user information using JWT token"""
@@ -145,10 +174,109 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         "email": current_user["email"]
     }
 
+
 @app.post("/verify-token")
 async def verify_user_token(current_user: dict = Depends(get_current_user)):
     """Verify if token is valid"""
     return {"valid": True, "user": current_user}
+
+
+@app.post("/create_profile", response_model=ProfileResponse, status_code=status.HTTP_201_CREATED)
+async def create_profile(request: CreateProfileRequest):
+    # Check if profile already exists
+    existing_profile = get_profile_by_user_id(request.user_id)
+    if existing_profile:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Profile already created"
+        )
+
+    # Create profile
+    try:
+        print(request)
+        create_profile_in_db(request.user_id, request.handle,
+                             request.display_name, request.profile_picture_url)
+
+        return ProfileResponse(
+            user_id=request.user_id,
+            handle=request.handle,
+            display_name=request.display_name,
+            profile_picture_url=request.profile_picture_url
+        )
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create profile"
+        )
+
+
+@app.get("/profile/{user_id}", response_model=ProfileResponse)
+async def get_profile(user_id: int):
+    """Get user profile by user_id"""
+    try:
+        profile = get_profile_by_user_id(user_id)
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile not found"
+            )
+        
+        return ProfileResponse(
+            user_id=profile["user_id"],
+            handle=profile["handle"],
+            display_name=profile["display_name"],
+            profile_picture_url=profile["profile_picture_url"]
+        )
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        print(f"Error getting profile: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get profile"
+        )
+
+
+@app.put("/update_display_name", response_model=UpdateDisplayNameResponse)
+async def update_display_name_endpoint(
+    request: UpdateDisplayNameRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update display name for the authenticated user"""
+    try:
+        # Validate display name is not empty
+        if not request.display_name.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Display name cannot be empty"
+            )
+        
+        # Update display name in database
+        success = update_display_name(current_user["user_id"], request.display_name.strip())
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile not found"
+            )
+        
+        return UpdateDisplayNameResponse(
+            user_id=current_user["user_id"],
+            display_name=request.display_name.strip()
+        )
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        print(f"Error updating display name: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update display name"
+        )
+
 
 if __name__ == "__main__":
     import uvicorn
