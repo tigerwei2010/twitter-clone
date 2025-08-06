@@ -355,7 +355,8 @@
             // Delete access token cookie
             deleteCookie('access_token');
 
-            document.querySelectorAll('.form').forEach(form => form.style.display = 'block');
+            // Reset form display styles and show tabs
+            document.querySelectorAll('.form').forEach(form => form.style.display = '');
             document.querySelector('.tabs').style.display = 'flex';
             document.getElementById('user-info').style.display = 'none';
 
@@ -363,8 +364,11 @@
             document.querySelectorAll('input').forEach(input => input.value = '');
             clearMessages();
 
-            // Reset to signin tab
-            showTab('signin');
+            // Reset to signin tab - this will properly handle form visibility
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector('.tab').classList.add('active'); // First tab (signin)
+            document.querySelectorAll('.form').forEach(form => form.classList.remove('active'));
+            document.getElementById('signin-form').classList.add('active');
         }
 
         // Sign Up
@@ -400,8 +404,10 @@
                     // Store access token in cookie (6 months = 180 days)
                     setCookie('access_token', data.access_token, 180);
 
-                    showMessage('signup', 'Account created successfully!', 'success');
-                    setTimeout(() => showUserInfo(data), 1000);
+                    showMessage('signup', 'Account created successfully! Redirecting to profile...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'profile.html';
+                    }, 1000);
                 } else {
                     showMessage('signup', data.detail || 'Failed to create account');
                 }

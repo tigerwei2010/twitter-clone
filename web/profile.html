@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Management - Twitter Clone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1da1f2, #14171a);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .header {
+            background: #1da1f2;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .nav {
+            background: #f7f9fa;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .nav a {
+            color: #1da1f2;
+            text-decoration: none;
+            font-weight: 600;
+            margin-right: 20px;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .profile-card {
+            background: #f7f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .profile-card.show {
+            display: block;
+        }
+
+        .profile-card h3 {
+            color: #1da1f2;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .profile-info {
+            margin-bottom: 12px;
+        }
+
+        .profile-info label {
+            font-weight: 600;
+            color: #14171a;
+            margin-right: 10px;
+        }
+
+        .profile-info span {
+            color: #657786;
+        }
+
+        .profile-picture {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-top: 10px;
+            border: 3px solid #1da1f2;
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+        }
+
+        .form-section h2 {
+            color: #14171a;
+            margin-bottom: 20px;
+            font-size: 22px;
+            border-bottom: 2px solid #e1e8ed;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #14171a;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1da1f2;
+        }
+
+        .form-group .help-text {
+            font-size: 14px;
+            color: #657786;
+            margin-top: 5px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: #1da1f2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            background: #1991db;
+        }
+
+        .btn:disabled {
+            background: #aab8c2;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #657786;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6570;
+        }
+
+        .message {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 16px;
+            color: #657786;
+        }
+
+        .no-profile {
+            text-align: center;
+            color: #657786;
+            margin: 30px 0;
+        }
+
+        .no-profile h3 {
+            color: #14171a;
+            margin-bottom: 10px;
+        }
+
+        .logged-out {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .logged-out h3 {
+            color: #14171a;
+            margin-bottom: 15px;
+        }
+
+        .logged-out p {
+            color: #657786;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Profile Management</h1>
+            <p>Create and manage your Twitter profile</p>
+        </div>
+
+        <div class="nav">
+            <a href="index.html">← Back to Account</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+
+        <div class="content">
+            <!-- Not logged in message -->
+            <div class="logged-out" id="logged-out" style="display: none;">
+                <h3>Please Sign In</h3>
+                <p>You need to be signed in to manage your profile.</p>
+                <a href="index.html" class="btn">Go to Sign In</a>
+            </div>
+
+            <!-- Current Profile Display -->
+            <div class="profile-card" id="current-profile">
+                <h3>Your Current Profile</h3>
+                <div class="profile-info">
+                    <label>Handle:</label>
+                    <span id="profile-handle">-</span>
+                </div>
+                <div class="profile-info">
+                    <label>Display Name:</label>
+                    <span id="profile-display-name">-</span>
+                </div>
+                <div class="profile-info">
+                    <label>Profile Picture:</label>
+                    <span id="profile-picture-text">-</span>
+                </div>
+                <img id="profile-picture" class="profile-picture" style="display: none;" alt="Profile Picture">
+            </div>
+
+            <!-- No Profile Message -->
+            <div class="no-profile" id="no-profile" style="display: none;">
+                <h3>No Profile Found</h3>
+                <p>You haven't created a profile yet. Create one below to get started!</p>
+            </div>
+
+            <!-- Create Profile Form -->
+            <div class="form-section" id="create-profile-section">
+                <h2>Create Profile</h2>
+                <form id="create-profile-form">
+                    <div class="form-group">
+                        <label for="handle">Handle (Username)</label>
+                        <input type="text" id="handle" required placeholder="e.g., johndoe">
+                        <div class="help-text">Your unique username. Must be unique across all users.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="display-name">Display Name</label>
+                        <input type="text" id="display-name" required placeholder="e.g., John Doe">
+                        <div class="help-text">Your full name as it will appear to others.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-picture-url">Profile Picture URL (Optional)</label>
+                        <input type="url" id="profile-picture-url" placeholder="https://example.com/image.jpg">
+                        <div class="help-text">Direct link to your profile picture image.</div>
+                    </div>
+                    <button type="submit" class="btn">Create Profile</button>
+                    <div class="loading" id="create-loading">Creating profile...</div>
+                    <div class="message" id="create-message"></div>
+                </form>
+            </div>
+
+            <!-- Update Display Name Form -->
+            <div class="form-section" id="update-name-section" style="display: none;">
+                <h2>Update Display Name</h2>
+                <form id="update-name-form">
+                    <div class="form-group">
+                        <label for="new-display-name">New Display Name</label>
+                        <input type="text" id="new-display-name" required placeholder="Enter new display name">
+                        <div class="help-text">Change how your name appears to other users.</div>
+                    </div>
+                    <button type="submit" class="btn">Update Display Name</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadProfile()">Refresh Profile</button>
+                    <div class="loading" id="update-loading">Updating display name...</div>
+                    <div class="message" id="update-message"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ACCOUNT_SERVICE_URL = 'http://localhost:8002';
+        let currentUser = null;
+
+        // Cookie management functions
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+        }
+
+        // Get auth headers with token
+        function getAuthHeaders() {
+            const token = getCookie('access_token');
+            return token ? {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            } : {
+                'Content-Type': 'application/json'
+            };
+        }
+
+        // Show message
+        function showMessage(formId, message, type = 'error') {
+            const messageEl = document.getElementById(`${formId}-message`);
+            messageEl.textContent = message;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+        }
+
+        // Show loading
+        function showLoading(formId, show = true) {
+            const loadingEl = document.getElementById(`${formId}-loading`);
+            const submitBtn = document.querySelector(`#${formId}-form .btn`);
+
+            loadingEl.style.display = show ? 'block' : 'none';
+            if (submitBtn) submitBtn.disabled = show;
+        }
+
+        // Clear all messages
+        function clearMessages() {
+            document.querySelectorAll('.message').forEach(msg => {
+                msg.style.display = 'none';
+                msg.textContent = '';
+            });
+        }
+
+        // Logout
+        function logout() {
+            deleteCookie('access_token');
+            window.location.href = 'index.html';
+        }
+
+        // Check authentication and load profile on page load
+        window.onload = async function() {
+            const token = getCookie('access_token');
+            if (!token) {
+                showLoggedOutState();
+                return;
+            }
+
+            // Verify token
+            try {
+                const response = await fetch(`${ACCOUNT_SERVICE_URL}/verify-token`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data.user;
+                    await loadProfile();
+                } else {
+                    deleteCookie('access_token');
+                    showLoggedOutState();
+                }
+            } catch (error) {
+                console.error('Token verification failed:', error);
+                deleteCookie('access_token');
+                showLoggedOutState();
+            }
+        };
+
+        // Show logged out state
+        function showLoggedOutState() {
+            document.getElementById('logged-out').style.display = 'block';
+            document.getElementById('current-profile').classList.remove('show');
+            document.getElementById('no-profile').style.display = 'none';
+            document.getElementById('create-profile-section').style.display = 'none';
+            document.getElementById('update-name-section').style.display = 'none';
+        }
+
+        // Load current profile
+        async function loadProfile() {
+            try {
+                // Try to fetch existing profile
+                const response = await fetch(`${ACCOUNT_SERVICE_URL}/profile`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const profile = await response.json();
+                    displayProfile(profile);
+                } else if (response.status === 404) {
+                    // No profile exists, show create form
+                    showCreateProfileForm();
+                } else {
+                    throw new Error('Failed to load profile');
+                }
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+                showMessage('create', 'Failed to load profile information.', 'error');
+                showCreateProfileForm();
+            }
+        }
+
+        // Display existing profile
+        function displayProfile(profile) {
+            document.getElementById('profile-handle').textContent = profile.handle;
+            document.getElementById('profile-display-name').textContent = profile.display_name;
+            
+            if (profile.profile_picture_url) {
+                document.getElementById('profile-picture-text').textContent = 'Set';
+                const img = document.getElementById('profile-picture');
+                img.src = profile.profile_picture_url;
+                img.style.display = 'block';
+            } else {
+                document.getElementById('profile-picture-text').textContent = 'Not set';
+                document.getElementById('profile-picture').style.display = 'none';
+            }
+
+            // Show profile and update form, hide create form
+            document.getElementById('current-profile').classList.add('show');
+            document.getElementById('no-profile').style.display = 'none';
+            document.getElementById('create-profile-section').style.display = 'none';
+            document.getElementById('update-name-section').style.display = 'block';
+            
+            // Pre-fill the update form
+            document.getElementById('new-display-name').value = profile.display_name;
+        }
+
+        // Show create profile form
+        function showCreateProfileForm() {
+            document.getElementById('current-profile').classList.remove('show');
+            document.getElementById('no-profile').style.display = 'block';
+            document.getElementById('create-profile-section').style.display = 'block';
+            document.getElementById('update-name-section').style.display = 'none';
+        }
+
+        // Create Profile
+        document.getElementById('create-profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const handle = document.getElementById('handle').value.trim();
+            const displayName = document.getElementById('display-name').value.trim();
+            const profilePictureUrl = document.getElementById('profile-picture-url').value.trim();
+
+            clearMessages();
+
+            if (!handle || !displayName) {
+                showMessage('create', 'Handle and display name are required.');
+                return;
+            }
+
+            showLoading('create', true);
+
+            try {
+                const requestBody = {
+                    handle: handle,
+                    display_name: displayName
+                };
+
+                if (profilePictureUrl) {
+                    requestBody.profile_picture_url = profilePictureUrl;
+                }
+
+                const response = await fetch(`${ACCOUNT_SERVICE_URL}/create_profile`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('create', 'Profile created successfully!', 'success');
+                    setTimeout(() => {
+                        displayProfile(data);
+                        clearMessages();
+                    }, 1500);
+                } else {
+                    if (response.status === 409) {
+                        showMessage('create', 'You already have a profile or this handle is taken.');
+                    } else {
+                        showMessage('create', data.detail || 'Failed to create profile.');
+                    }
+                }
+            } catch (error) {
+                console.error('Create profile error:', error);
+                showMessage('create', 'Network error. Please check if the service is running.');
+            } finally {
+                showLoading('create', false);
+            }
+        });
+
+        // Update Display Name
+        document.getElementById('update-name-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const newDisplayName = document.getElementById('new-display-name').value.trim();
+
+            clearMessages();
+
+            if (!newDisplayName) {
+                showMessage('update', 'Display name cannot be empty.');
+                return;
+            }
+
+            showLoading('update', true);
+
+            try {
+                const response = await fetch(`${ACCOUNT_SERVICE_URL}/update_display_name`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        display_name: newDisplayName
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('update', 'Display name updated successfully!', 'success');
+                    // Update the displayed profile
+                    document.getElementById('profile-display-name').textContent = newDisplayName;
+                } else {
+                    if (response.status === 404) {
+                        showMessage('update', 'Profile not found. Please create a profile first.');
+                    } else if (response.status === 400) {
+                        showMessage('update', 'Display name cannot be empty.');
+                    } else {
+                        showMessage('update', data.detail || 'Failed to update display name.');
+                    }
+                }
+            } catch (error) {
+                console.error('Update display name error:', error);
+                showMessage('update', 'Network error. Please check if the service is running.');
+            } finally {
+                showLoading('update', false);
+            }
+        });
+    </script>
+</body>
+
+</html>
