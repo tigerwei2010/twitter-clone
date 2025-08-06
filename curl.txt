@@ -1,0 +1,14 @@
+curl -v -X POST http://localhost:8002/create_profile -H "Content-Type: -H application/json" "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo3ODU3MDkzOTIzNDY0ODA2NCwiZW1haWwiOiJkZWJ1Z0BleGFtcGxlLmNvbSIsImV4cCI6MTc3MDA2MzYyMn0.hbYR92t0T0V2fki-mZoYVeQRW6wLicN2Pd9TtbB5sbQ" -d '{"handle": "test_bot2”, "display_name": "Test Bot"}' | jq
+
+
+curl -v -X POST http://localhost:8002/create_profile \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo3ODU3MDkzOTIzNDY0ODA2NCwiZW1haWwiOiJkZWJ1Z0BleGFtcGxlLmNvbSIsImV4cCI6MTc3MDA2NDQ2Nn0.dVwO54VR4Yxdg9PkaF3wU0pbkjYLvmh1rJC9ltTEWN0" \
+    -d '{"handle": "debug_bot", "display_name": "Debug Bot"}' | jq
+
+  curl -X PUT http://localhost:8002/update_display_name \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo3ODU3MDkzOTIzNDY0ODA2NCwiZW1haWwiOiJkZWJ1Z0BleGFtcGxlLmNvbSIsImV4cCI6MTc3MDA2NDQ2Nn0.dVwO54VR4Yxdg9PkaF3wU0pbkjYLvmh1rJC9ltTEWN0" \
+    -d '{
+      "display_name": "Nice Debug Bot!!"
+    }' | jq

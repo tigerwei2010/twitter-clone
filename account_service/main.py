@@ -62,7 +62,6 @@ class AccountResponse(BaseModel):
 
 
 class CreateProfileRequest(BaseModel):
-    user_id: int
     handle: str
     display_name: str
     profile_picture_url: Optional[str] = None
@@ -182,9 +181,13 @@ async def verify_user_token(current_user: dict = Depends(get_current_user)):
 
 
 @app.post("/create_profile", response_model=ProfileResponse, status_code=status.HTTP_201_CREATED)
-async def create_profile(request: CreateProfileRequest):
+async def create_profile(
+    request: CreateProfileRequest,
+    current_user: dict = Depends(get_current_user)
+):
     # Check if profile already exists
-    existing_profile = get_profile_by_user_id(request.user_id)
+    user_id = current_user["user_id"]
+    existing_profile = get_profile_by_user_id(user_id)
     if existing_profile:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -194,11 +197,11 @@ async def create_profile(request: CreateProfileRequest):
     # Create profile
     try:
         print(request)
-        create_profile_in_db(request.user_id, request.handle,
+        create_profile_in_db(user_id, request.handle,
                              request.display_name, request.profile_picture_url)
 
         return ProfileResponse(
-            user_id=request.user_id,
+            user_id=user_id,
             handle=request.handle,
             display_name=request.display_name,
             profile_picture_url=request.profile_picture_url
