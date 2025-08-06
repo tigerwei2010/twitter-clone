@@ -12,3 +12,8 @@ curl -v -X POST http://localhost:8002/create_profile \
     -d '{
       "display_name": "Nice Debug Bot!!"
     }' | jq
+
+
+
+"email": "debug@example.com",
+"password": "debugpassword123"
