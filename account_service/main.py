@@ -116,7 +116,7 @@ async def signup(request: SignupRequest):
 
         # Create access token
         access_token = create_access_token(
-            data={"sub": user_id, "email": request.email})
+            data={"user_id": user_id, "email": request.email})
 
         return AccountResponse(
             user_id=user_id,
@@ -155,7 +155,7 @@ async def signin(request: SigninRequest):
 
     # Create access token
     access_token = create_access_token(
-        data={"sub": account["user_id"], "email": account["email"]})
+        data={"user_id": account["user_id"], "email": account["email"]})
 
     return AccountResponse(
         user_id=account["user_id"],
@@ -221,7 +221,7 @@ async def get_profile(user_id: int):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Profile not found"
             )
-        
+
         return ProfileResponse(
             user_id=profile["user_id"],
             handle=profile["handle"],
@@ -252,21 +252,22 @@ async def update_display_name_endpoint(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Display name cannot be empty"
             )
-        
+
         # Update display name in database
-        success = update_display_name(current_user["user_id"], request.display_name.strip())
-        
+        success = update_display_name(
+            current_user["user_id"], request.display_name.strip())
+
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Profile not found"
             )
-        
+
         return UpdateDisplayNameResponse(
             user_id=current_user["user_id"],
             display_name=request.display_name.strip()
         )
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions
         raise
