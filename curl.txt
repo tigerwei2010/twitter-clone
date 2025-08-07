@@ -14,6 +14,14 @@ curl -v -X POST http://localhost:8002/create_profile \
     }' | jq
 
 
+curl -X POST http://localhost:8003/follow \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo3ODU3MDkzOTIzNDY0ODA2NCwiZW1haWwiOiJkZWJ1Z0BleGFtcGxlLmNvbSIsImV4cCI6MTc3MDA2NDQ2Nn0.dVwO54VR4Yxdg9PkaF3wU0pbkjYLvmh1rJC9ltTEWN0" \
+    -d '{
+      "handle": "jayden"
+    }' | jq
+
+
 
 "email": "debug@example.com",
 "password": "debugpassword123"
