@@ -57,6 +57,37 @@ def get_profile_by_user_id(user_id: int):
             return cursor.fetchone()
 
 
+def get_user_by_handle(handle: str):
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT user_id, handle, display_name, profile_picture_url FROM profiles WHERE handle = %s",
+                (handle,)
+            )
+            return cursor.fetchone()
+
+
+def get_relationship(follower: int, followee: int):
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT id, follower, followee, deleted FROM follows WHERE follower = %s and followee = %s",
+                (follower, followee)
+            )
+            return cursor.fetchone()
+
+
+def update_relationship(relationship_id: int, deleted: bool):
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "UPDATE follows SET deleted = %s WHERE id = %s",
+                (deleted, relationship_id)
+            )
+            conn.commit()
+            return cursor.rowcount > 0  # Returns True if a row was updated
+
+
 def update_display_name(user_id: int, new_display_name: str):
     """Update the display name for a user profile"""
     with get_db_connection() as conn:
@@ -67,3 +98,13 @@ def update_display_name(user_id: int, new_display_name: str):
             )
             conn.commit()
             return cursor.rowcount > 0  # Returns True if a row was updated
+
+
+def create_follow_relationship(relationship_id: int, follower: int, followee: int):
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO follows (id, follower, followee) VALUES (%s, %s, %s)",
+                (relationship_id, follower, followee)
+            )
+            conn.commit()
