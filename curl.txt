@@ -23,5 +23,13 @@ curl -X POST http://localhost:8003/follow \
 
 
 
+curl -X POST http://localhost:8003/tweet \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo3ODU3MDkzOTIzNDY0ODA2NCwiZW1haWwiOiJkZWJ1Z0BleGFtcGxlLmNvbSIsImV4cCI6MTc3MDE0OTk4MH0.ZDFxg2vDN48M9qMt5efmp-TNFWMVO1qxexbQmRb8uiY" \
+    -d '{
+      "content": "I love Tiger"
+    }' | jq
+
+
 "email": "debug@example.com",
 "password": "debugpassword123"
