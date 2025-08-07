@@ -27,6 +27,15 @@ class FollowResponse(BaseModel):
     followee_display_name: str
 
 
+class TweetRequest(BaseModel):
+    content: str
+
+
+class TweetResponse(BaseModel):
+    tweet_id: int
+    content: str
+
+
 @app.post("/follow", response_model=FollowResponse, status_code=status.HTTP_201_CREATED)
 async def follow(request: FollowRequest,
                  current_user: dict = Depends(get_current_user)):
@@ -72,6 +81,34 @@ async def follow(request: FollowRequest,
         )
 
 
+@app.post("/tweet", response_model=TweetResponse, status_code=status.HTTP_201_CREATED)
+async def create_tweet_endpoint(request: TweetRequest,
+                                current_user: dict = Depends(get_current_user)):
+
+    user_id = current_user['user_id']
+    print(f'user_id = {user_id}')
+    # Create relationship
+    try:
+        # Generate user_id from snowflake service
+        content = request.content
+        tweet_id = await get_snowflake_id()
+        print(f'tweet_id = {tweet_id}')
+
+        print(f'content = {content}')
+        db_result = db.create_tweet(tweet_id, user_id, content)
+        print(f'db_result = {db_result}')
+
+        return TweetResponse(tweet_id=tweet_id, content=content)
+    except HTTPException:
+        # Re-raise HTTP exceptions (snowflake service errors)
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create tweet"
+        )
+
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8003)

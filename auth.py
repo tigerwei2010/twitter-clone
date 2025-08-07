@@ -32,12 +32,9 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Verify JWT token"""
     try:
         token = credentials.credentials
-        print(f'token = {token}')
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("user_id")
         email: str = payload.get("email")
-        print(f'user_id = {user_id}')
-        print(f'email = {email}')
 
         if user_id is None or email is None:
             raise HTTPException(

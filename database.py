@@ -108,3 +108,16 @@ def create_follow_relationship(relationship_id: int, follower: int, followee: in
                 (relationship_id, follower, followee)
             )
             conn.commit()
+            return cursor.rowcount > 0  # Returns True if a row was created
+
+
+def create_tweet(tweet_id: int, user_id: int, content: str):
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO tweets (id, user_id, content) VALUES (%s, %s, %s)",
+                (tweet_id, user_id, content)
+            )
+            print('excute done')
+            conn.commit()
+            return cursor.rowcount > 0  # Returns True if a row was created
