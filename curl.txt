@@ -40,12 +40,7 @@ curl -X POST http://localhost:8004/save \
     }' | jq
 
 
-curl -X POST http://localhost:8004/read \
-    -H "Content-Type: application/json" \
-    -d '{
-      "dataset": "test",
-      "key": "apple"
-    }' | jq
+curl -X GET "http://localhost:8004/read?dataset=test&key=apple" | jq
 
 curl -X POST http://localhost:8004/read \
     -H "Content-Type: application/json" \

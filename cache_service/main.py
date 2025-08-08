@@ -50,11 +50,6 @@ class DeleteResponse(BaseModel):
     found: bool
 
 
-class ReadRequest(BaseModel):
-    dataset: str
-    key: str
-
-
 class ReadResponse(BaseModel):
     dataset: str
     key: str
@@ -73,12 +68,9 @@ async def save_endpoint(request: SaveRequest):
     return SaveResponse(dataset=dataset, key=key)
 
 
-@app.post("/read", response_model=ReadResponse, status_code=status.HTTP_201_CREATED)
-async def read_endpoint(request: ReadRequest):
-    dataset = request.dataset
-    key = request.key
-
-    cache = get_cache(request.dataset)
+@app.get("/read", response_model=ReadResponse, status_code=status.HTTP_200_OK)
+async def read_endpoint(dataset: str, key: str):
+    cache = get_cache(dataset)
     value = cache.get(key, None)
     found = value is not None
     return ReadResponse(dataset=dataset, key=key, found=found, value=value)
