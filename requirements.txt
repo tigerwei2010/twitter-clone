@@ -1,3 +1,4 @@
+cachebox==5.0.1
 fastapi==0.116.1
 uvicorn==0.35.0
 psycopg2==2.9.10

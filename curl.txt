@@ -31,5 +31,37 @@ curl -X POST http://localhost:8003/tweet \
     }' | jq
 
 
+curl -X POST http://localhost:8004/save \
+    -H "Content-Type: application/json" \
+    -d '{
+      "dataset": "test",
+      "key": "apple",
+      "value": "5"
+    }' | jq
+
+
+curl -X POST http://localhost:8004/read \
+    -H "Content-Type: application/json" \
+    -d '{
+      "dataset": "test",
+      "key": "apple"
+    }' | jq
+
+curl -X POST http://localhost:8004/read \
+    -H "Content-Type: application/json" \
+    -d '{
+      "dataset": "test",
+      "key": "pear"
+    }' | jq
+
+curl -X POST http://localhost:8004/delete \
+    -H "Content-Type: application/json" \
+    -d '{
+      "dataset": "test",
+      "key": "apple"
+    }' | jq
+
+
+
 "email": "debug@example.com",
 "password": "debugpassword123"
